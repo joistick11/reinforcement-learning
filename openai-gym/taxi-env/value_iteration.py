@@ -2,6 +2,7 @@
 
 import gym
 import numpy as np
+import time
 from gym import wrappers
 
 global number_of_states, number_of_actions, gamma, P
@@ -43,6 +44,7 @@ if __name__ == '__main__':
     # init value function
     v = np.zeros(number_of_states)
 
+    start = time.time()
     # Evaluating value-function
     while True:
         v_old = v.copy()
@@ -52,14 +54,17 @@ if __name__ == '__main__':
             break
 
     policy = create_policy(v).astype(np.int)
+    end = time.time()
+    print("Time: " + str(end - start))
 
     # apply policy
     overall_reward = 0.0
-    for _ in range(number_of_episodes):
+    for _ in range(0, 2):
         current_state = env.reset()
         while True:
             current_state, reward, done, info = env.step(policy[current_state])
-            # env.render()
+            env.render()
+            time.sleep(0.5)
             overall_reward += reward
             if done:
                 break

@@ -1,6 +1,7 @@
 # Policy iteration algorithm
 
 import gym
+import time
 from gym import wrappers
 import numpy as np
 
@@ -28,6 +29,7 @@ if __name__ == '__main__':
 
     number_of_episodes = 1000
 
+    start = time.time()
     # Until policy is stable
     while True:
         # Evaluate value-function
@@ -48,12 +50,15 @@ if __name__ == '__main__':
         if np.all(previous_pi == pi):
             print("Policy has converged")
             break
+    end = time.time()
+    print("Time: " + str(end - start))
 
     overall_reward = 0.0
-    for _ in range(number_of_episodes):
+    for _ in range(0, 2):
         current_state = env.reset()
         while True:
-            # env.render()
+            env.render()
+            time.sleep(.5)
             current_state, reward, done, info = env.step(pi[current_state])
             overall_reward += reward
             if done:

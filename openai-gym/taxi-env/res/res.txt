@@ -1,0 +1,2 @@
+value iteration - 0.35 секунд на обучение
+policy iteration - 0.21 секунд на обучение
