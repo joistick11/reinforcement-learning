@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     # apply policy
     overall_reward = 0.0
-    for _ in range(0, 2):
+    for _ in range(0, number_of_episodes):
         current_state = env.reset()
         while True:
             current_state, reward, done, info = env.step(policy[current_state])
