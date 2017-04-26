@@ -10,6 +10,8 @@ gym.envs.register(
     max_episode_steps=400
 )
 env = gym.make('CartPole-v12')
+# env.env.spec.timestep_limit = 400
+# env.env.spec.tags.wrapper_config.TimeLimit.max_episode_steps = 400
 
 V = []
 pi = []
@@ -162,20 +164,26 @@ def improve_policy(curr_state, prev_state, action, reward, reward_for_previous_a
     TP_A_S[prev_state][action][curr_state] += 1
 
 
+def update_pi():
+    global pi
+    for i in range(0, DESCR_DIMENSION):
+        for j in range(0, DESCR_DIMENSION):
+            for k in range(0, DESCR_DIMENSION):
+                for l in range(0, DESCR_DIMENSION):
+                    if (i, j, k, l) not in P:
+                            continue  # suppose a starting state
+                    profits = np.zeros(2)
+                    for a in P[(i, j, k, l)]:
+                        for prob, next_s, reward in P[(i, j, k, l)][a]:
+                            profits[a] += prob * (reward + gamma * V[next_s[0]][next_s[1]][next_s[2]][next_s[3]])
+                    pi[i][j][k][l] = np.argmax(profits)
+
+
 def update_policy():
     global pi
     print("Starting policy update")
-    # Until policy is stable
     while True:
-        # Evaluate value-function
-        for i in range(0, DESCR_DIMENSION):
-            for j in range(0, DESCR_DIMENSION):
-                for k in range(0, DESCR_DIMENSION):
-                    for l in range(0, DESCR_DIMENSION):
-                        V[i][j][k][l] = get_reward((i, j, k, l), pi[i][j][k][l])
-
-        # Update policy
-        policy_changed = False
+        value_function_changed = False
         for i in range(0, DESCR_DIMENSION):
             for j in range(0, DESCR_DIMENSION):
                 for k in range(0, DESCR_DIMENSION):
@@ -186,31 +194,16 @@ def update_policy():
                         for a in P[(i, j, k, l)]:
                             for prob, next_s, reward in P[(i, j, k, l)][a]:
                                 profits[a] += prob * (reward + gamma * V[next_s[0]][next_s[1]][next_s[2]][next_s[3]])
-                        # choose the best action
-                        # print(profits)
-                        new_action = np.argmax(profits)
-                        if pi[i][j][k][l] != new_action:
-                            pi[i][j][k][l] = new_action
-                            policy_changed = True
 
-        # Done, moving to the testing
-        if not policy_changed:
-            # print("Policy has converged")
+                        new_value = max(profits)
+                        if abs(V[i][j][k][l] - new_value) > .1:
+                            V[i][j][k][l] = new_value
+                            value_function_changed = True
+                            # Done, moving to the testing
+        if not value_function_changed:
             break
-        # else:
-            # print("Policy has not converged")
-    print("Finished with policy update")
-
-
-# Returns value function for state S when performing action a
-def get_reward(s, a):
-    v_for_a = 0
-    if s not in P:
-        return 0
-    if a in P[s]:
-        for prob, next_s, reward in P[s][a]:
-            v_for_a += prob * (reward + gamma * V[next_s[0]][next_s[1]][next_s[2]][next_s[3]])
-    return v_for_a
+    print("Finished with value function update")
+    update_pi()
 
 
 def to_tuple(a):
@@ -243,7 +236,7 @@ if __name__ == '__main__':
     env = wrappers.Monitor(env, 'cart-pole-results', force=True)
     init()
     # optimal was 10 times for 250 episodes
-    for _ in range(0, 10):
-        explore(300)
+    for _ in range(0, 30):
+        explore(250)
         update_policy()
-    simulate(7000)
+    simulate(5000)
